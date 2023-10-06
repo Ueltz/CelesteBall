@@ -10,12 +10,14 @@ extends CharacterBody2D
 @export var max_dash_count : int = 3
 var jump_count : int = 2
 var dash_count : int = 3
-var momentum : int = 0
+@export var momentum : int = 0
 var dash_direction = 0
 var dashing = false
 @export_category("Toggle Functions") # Double jump feature is disable by default (Can be toggled from inspector)
 @export var double_jump : = true
-
+@export var infinite_dash = true
+@onready var score_texture = %Score/ScoreTexture
+@onready var score_label = %Score/ScoreLabel
 var is_grounded : bool = false
 
 @onready var player_sprite = $AnimatedSprite2D
@@ -30,6 +32,7 @@ func _process(_delta):
 	movement()
 	player_animations()
 	flip_player()
+	score_label.text = "x %d" %momentum
 	
 # --------- CUSTOM FUNCTIONS ---------- #
 
@@ -48,20 +51,23 @@ func movement():
 	
 	# Move Player
 	if Input.is_action_pressed("Left"):
-		if !dashing:
-			velocity.x = -move_speed
-		else:
-			velocity.x = momentum - move_speed
+		player_sprite.flip_h = true
+		velocity.x = momentum - move_speed
 		dash_direction = -1
 	elif Input.is_action_pressed("Right"):
-		if !dashing:
-			velocity.x = move_speed
-		else:
-			velocity.x = momentum + move_speed
+		velocity.x = momentum + move_speed
+		player_sprite.flip_h = false
 		dash_direction = 1
+	elif dashing:
+		velocity.x = momentum + dash_direction * move_speed
 	else:
 		velocity.x = lerp(velocity.x,0.,0.1)
-	momentum = lerp(momentum * 1.0, 0., 0.2)
+		
+	if is_on_floor() and !dashing:
+		momentum = lerp(momentum * 1.0, 0., 0.15)
+	else:
+		momentum = lerp(momentum * 1.0, 0., 0.01)
+	
 		
 	handle_dashing()
 	handle_jumping()
@@ -70,18 +76,22 @@ func movement():
 # Handles jumping functionality (double jump or single jump, can be toggled from inspector)
 func handle_jumping():
 	if Input.is_action_just_pressed("Jump"):
+		if dashing:
+			dashing = false
 		if is_on_floor() and !double_jump:
 			jump()
 		elif double_jump and jump_count > 0:
 			jump()
 			jump_count -= 1
+		
 func handle_dashing():
 	if Input.is_action_just_pressed("dash"):
 		if is_on_floor():
 			dash()
 		elif dash_count > 0:
 			dash()
-			dash_count -= 1
+			if !infinite_dash:
+				dash_count -= 1
 			jump_count = max_jump_count
 # Player jump
 func jump():
@@ -90,14 +100,11 @@ func jump():
 	velocity.y = -jump_force
 # Player dash
 func dash():
-	if dashing:
-		momentum = ((move_speed + abs(momentum) * 0.1) * 3.5 * dash_direction)
-	else:
-		momentum = move_speed * 3 * dash_direction
-	velocity.x = momentum + 0.1 * velocity.x
+	momentum += (move_speed + abs(momentum) * 0.1) * 1 * dash_direction
+	velocity.x += momentum 
 	if !dashing:
 		dashing = true
-		await get_tree().create_timer(0.2).timeout
+		await get_tree().create_timer(0.1).timeout
 		dashing = false
 		
 # Handle Player Animations
@@ -112,13 +119,12 @@ func player_animations():
 			player_sprite.play("Idle")
 	else:
 		player_sprite.play("Jump")
+		if dashing:
+			particle_trails.emitting = true
 
 # Flip player sprite based on X velocity
 func flip_player():
-	if velocity.x < 0: 
-		player_sprite.flip_h = true
-	elif velocity.x > 0:
-		player_sprite.flip_h = false
+	pass
 
 # Tween Animations
 func death_tween():
