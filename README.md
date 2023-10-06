@@ -1,1 +1,2 @@
-# BASE: PLATFORMER 2D STARTER BY GAMES2PLAY STUDIOS
+# BapCord CelesteBall
+Filler text goes here, this project is basically a godot template for now
