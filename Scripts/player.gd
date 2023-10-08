@@ -4,7 +4,7 @@ extends CharacterBody2D
 
 @export_category("Player Properties") # You can tweak these changes according to your likings
 @export var move_speed : float = 400
-@export var jump_force : float = 600
+@export var jump_force : float = 800
 @export var gravity : float = 30
 @export var max_jump_count : int = 2
 @export var max_dash_count : int = 3
@@ -64,9 +64,9 @@ func movement():
 		velocity.x = lerp(velocity.x,0.,0.1)
 		
 	if is_on_floor() and !dashing:
-		momentum = lerp(momentum * 1.0, 0., 0.15)
-	else:
-		momentum = lerp(momentum * 1.0, 0., 0.01)
+		momentum = lerp(momentum * 1.0, 0., 0.1)
+	elif !dashing:
+		momentum = lerp(momentum * 1.0, 0., 0.015)
 	
 		
 	handle_dashing()
@@ -100,7 +100,8 @@ func jump():
 	velocity.y = -jump_force
 # Player dash
 func dash():
-	momentum += (move_speed + abs(momentum) * 0.1) * 1 * dash_direction
+	dash_tween()
+	momentum += (move_speed + abs(momentum) * 0.2) * 1.2 * dash_direction
 	velocity.x += momentum 
 	if !dashing:
 		dashing = true
@@ -114,11 +115,11 @@ func player_animations():
 	if is_on_floor():
 		if abs(velocity.x) > move_speed * 0.2:
 			particle_trails.emitting = true
-			player_sprite.play("Walk", 1.5)
+			player_sprite.play("birb", 1.5)
 		else:
-			player_sprite.play("Idle")
+			player_sprite.play("birb")
 	else:
-		player_sprite.play("Jump")
+		player_sprite.play("bird")
 		if dashing:
 			particle_trails.emitting = true
 
@@ -146,6 +147,10 @@ func jump_tween():
 	tween.tween_property(self, "scale", Vector2(0.7, 1.4), 0.1)
 	tween.tween_property(self, "scale", Vector2.ONE, 0.1)
 
+func dash_tween():
+	var tween = create_tween()
+	tween.tween_property(self,"scale",Vector2(1.2,0.7),0.1)
+	tween.tween_property(self, "scale", Vector2.ONE, 0.1)
 # --------- SIGNALS ---------- #
 
 # Reset the player's position to the current level spawn point if collided with any trap
