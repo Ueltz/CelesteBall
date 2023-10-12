@@ -70,8 +70,6 @@ func movement():
 	
 	if is_on_floor() and !dashing:
 		momentum = lerp(momentum * 1.0, 0., 0.1)
-	elif !dashing:
-		momentum = lerp(momentum * 1.0, 0., 0.015)
 	
 		
 	handle_dashing()
