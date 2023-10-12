@@ -61,7 +61,7 @@ func movement():
 	elif dashing:
 		velocity.x = momentum + dash_direction * move_speed
 	elif Input.is_action_pressed("Crouch"):
-		crouch()
+		crouch() #crouching, which reduces momentum loss
 		if is_on_floor():
 			velocity.x = lerp(velocity.x,0.,0.033)
 		
@@ -69,7 +69,7 @@ func movement():
 		velocity.x = lerp(velocity.x,0.,0.1)
 	
 	if is_on_floor() and !dashing:
-		momentum = lerp(momentum * 1.0, 0., 0.1)
+		momentum = lerp(momentum * 1.0, 0., 0.1) 
 	
 		
 	handle_dashing()
